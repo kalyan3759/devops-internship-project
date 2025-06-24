@@ -1,5 +1,4 @@
-# docker-compose.yml placeholder
-version: '3'
+version: '3.8'  # Using a more modern version
 
 services:
   service1:
@@ -7,12 +6,24 @@ services:
     container_name: golang_service
     ports:
       - "8001:8001"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8001/ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
 
   service2:
     build: ./service_2
     container_name: python_service
     ports:
       - "8002:8002"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8002/hello"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+    restart: always
 
   nginx:
     build: ./nginx
@@ -20,5 +31,8 @@ services:
     ports:
       - "8080:80"
     depends_on:
-      - service1
-      - service2
+      service1:
+        condition: service_healthy
+      service2:
+        condition: service_healthy
+    restart: always
